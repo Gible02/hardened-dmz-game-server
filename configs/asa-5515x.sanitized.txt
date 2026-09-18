@@ -1,0 +1,107 @@
+! =============================================================
+! Cisco ASA 5515-X — Three-legged firewall (ASA-FW-01)
+! Zones     : outside Gi0/3 | inside Gi0/0 | dmz Gi0/2
+! NOTE      : Gi0/1 is a physically faulty port on this unit.
+!             No expansion module — only Gi0/0-Gi0/5 exist.
+! NOTE      : This device performs NO NAT. It routes and filters
+!             between private subnets; the 1921 owns translation.
+! OS        : 9.3(3) · 8192 MB RAM · Serial <SERIAL>
+! Build doc : docs/05-asa-5515x.md
+! Sanitized : 2026-09-14
+! =============================================================
+
+hostname ASA-FW-01
+enable password <REDACTED> encrypted
+!
+! --- Interfaces ---
+interface GigabitEthernet0/0
+ description INSIDE -- to Catalyst 2960X
+ nameif inside
+ security-level 100
+ ip address 192.168.10.1 255.255.255.0
+ no shutdown
+!
+interface GigabitEthernet0/2
+ description DMZ -- direct to game server host
+ nameif dmz
+ security-level 50
+ ip address <DMZ_IF_IP> 255.255.255.0
+ no shutdown
+!
+interface GigabitEthernet0/3
+ description OUTSIDE -- to 1921 Gi0/1 (Gi0/1 on this unit is faulty)
+ nameif outside
+ security-level 0
+ ip address 192.168.100.2 255.255.255.252
+ no shutdown
+!
+! --- Objects ---
+object network MC-SERVER
+ host 192.168.20.10
+object network DMZ-NET
+ subnet 192.168.20.0 255.255.255.0
+object network INSIDE-NET
+ subnet 192.168.10.0 255.255.255.0
+!
+! --- Access lists ---
+!
+! OUTSIDE-IN : the exposed surface. One host, one port, one protocol.
+access-list OUTSIDE-IN extended permit udp any object MC-SERVER eq 19132
+access-list OUTSIDE-IN extended permit icmp any any echo-reply
+access-list OUTSIDE-IN extended permit icmp any any unreachable
+access-list OUTSIDE-IN extended permit icmp any any time-exceeded
+access-list OUTSIDE-IN extended deny ip any any log informational interval 300
+!
+! DMZ-IN : containment + default-deny egress (C-02 / C-03).
+! Deny rules first, permits second, logged deny last. ASA evaluates top-down
+! and stops at the first match, so the infrastructure denies MUST precede the
+! broad HTTPS permit or they never fire.
+!
+! Rollout is staged - see docs/16-egress-filtering.md. Do not paste the final
+! deny without running the discovery phase first; online-mode=true will break
+! and it will look like a game bug.
+!
+! -- containment: no pivot to the trusted LAN --
+access-list DMZ-IN line 1 extended deny ip object DMZ-NET object INSIDE-NET log informational interval 300
+!
+! -- infrastructure: no reach to the ISP gateway, router, or firewall --
+access-list DMZ-IN line 2 extended deny ip object DMZ-NET host 192.168.1.1 log informational interval 300
+access-list DMZ-IN line 3 extended deny ip object DMZ-NET 192.168.100.0 255.255.255.252 log informational interval 300
+!
+! -- named egress exceptions --
+access-list DMZ-IN line 4 extended permit udp object DMZ-NET host <DNS_SERVER> eq domain
+access-list DMZ-IN line 5 extended permit udp object DMZ-NET host <NTP_SERVER> eq ntp
+access-list DMZ-IN line 6 extended permit tcp object DMZ-NET any eq https
+access-list DMZ-IN line 7 extended permit udp object DMZ-NET any eq 443
+!
+! -- the control --
+access-list DMZ-IN line 8 extended deny ip any any log informational interval 300
+!
+<FILL: access-list INSIDE-IN — backup host to MC-SERVER, mgmt host, inside to outside>
+!
+access-group OUTSIDE-IN in interface outside
+access-group DMZ-IN in interface dmz
+<FILL: access-group INSIDE-IN in interface inside>
+!
+! --- NAT ---
+! Intentionally empty. show nat returns nothing and that is correct.
+! All translation happens on the 1921.
+!
+! --- Routing ---
+route outside 0.0.0.0 0.0.0.0 192.168.100.1
+!
+! --- DHCP (inside only) ---
+dhcpd address 192.168.10.100-192.168.10.200 inside
+dhcpd dns <DNS_1> <DNS_2> interface inside
+dhcpd enable inside
+!
+! --- Logging / threat detection (outstanding) ---
+<FILL: logging enable>
+<FILL: logging buffered informational>
+<FILL: threat-detection basic-threat>
+!
+! --- Management (outstanding) ---
+<FILL: ssh <MGMT_SUBNET> <MASK> inside>
+<FILL: ssh version 2>
+!
+: end

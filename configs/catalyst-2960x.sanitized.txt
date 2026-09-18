@@ -1,0 +1,64 @@
+! =============================================================
+! Catalyst WS-C2960X-48LPS-L — Access switch
+! Role      : Trusted-side L2, VLAN segmentation, L2 hardening
+! STATUS    : DRAFT — cabled and passing traffic, but this
+!             hardening config is NOT confirmed applied.
+!             Verify with show vlan brief / show interfaces status
+!             before marking C-07 complete.
+! NOTE      : VLAN 20 removed when the DMZ became a physical ASA
+!             interface. Uplink goes to ASA inside, not the router.
+! Build doc : docs/06-switch-2960x.md
+! Sanitized : 2026-09-14
+! =============================================================
+
+hostname <HOSTNAME>
+!
+! --- VLANs ---
+vlan 10
+ name TRUSTED
+vlan 99
+ name MGMT
+vlan 999
+ name BLACKHOLE
+!
+! --- Uplink to ASA inside (Gi0/0, 192.168.10.1) ---
+interface <UPLINK_PORT>
+ description UPLINK -- to ASA 5515-X Gi0/0 (inside)
+ <FILL: access or trunk — with a single inside VLAN, access is simpler and
+        removes trunk-negotiation as an attack surface. Decide and justify
+        in the build doc.>
+ switchport nonegotiate
+ no shutdown
+!
+! --- Access ports ---
+interface range <RANGE>
+ description TRUSTED CLIENTS
+ switchport mode access
+ switchport access vlan 10
+ switchport nonegotiate
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+ <FILL: switchport port-security / maximum / violation restrict / mac-address sticky>
+ no shutdown
+!
+! --- Unused ports: blackholed and shut ---
+interface range <UNUSED_RANGE>
+ description UNUSED
+ switchport mode access
+ switchport access vlan 999
+ shutdown
+!
+! --- Management ---
+interface Vlan99
+ ip address <MGMT_IP> <MASK>
+ no shutdown
+!
+<FILL: ip default-gateway 192.168.10.1>
+<FILL: line vty transport input ssh, access-class>
+!
+! --- Hardening ---
+<FILL: no ip http server / no ip http secure-server>
+<FILL: service password-encryption>
+<FILL: spanning-tree loopguard default>
+!
+end

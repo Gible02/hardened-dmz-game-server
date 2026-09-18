@@ -1,0 +1,35 @@
+# Never commit live configs or secrets — sanitize first (docs/15-sanitization.md)
+*.unsanitized*
+*-live.txt
+*.env
+.env*
+secrets/
+credentials*
+*.pem
+*.key
+id_rsa*
+known_hosts
+
+# Device config archive (pulled by scripts/config-backup.sh) — keep out of the repo
+config-archive/
+baseline/
+
+# Server runtime data
+world/
+worlds/
+backups/
+*.tar.gz
+*.zip
+logs/
+*.log
+allowlist.json
+permissions.json
+
+# Packet Tracer autosaves
+*.pkt.bak
+*~
+
+# OS noise
+.DS_Store
+Thumbs.db
+desktop.ini

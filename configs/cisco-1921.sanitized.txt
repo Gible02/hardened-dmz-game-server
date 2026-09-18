@@ -1,0 +1,57 @@
+! =============================================================
+! Cisco 1921 ISR — Edge Router (edge-rtr-01)
+! Role      : Internet edge, ALL NAT for the network, static routing
+! IOS       : 15.4(3)M3, C1900-UNIVERSALK9-M
+! Register  : 0x2102  (verified persistent across reload)
+! Build doc : docs/04-router-1921.md
+! Sanitized : 2026-09-14  (see docs/15-sanitization.md)
+! =============================================================
+
+hostname edge-rtr-01
+!
+! --- Interfaces ---
+interface GigabitEthernet0/0
+ description OUTSIDE -- to Optimum ONT (Altice GR140IG)
+ ip address 192.168.1.147 255.255.255.0
+ ip nat outside
+ no shutdown
+!
+interface GigabitEthernet0/1
+ description TRANSIT -- to ASA 5515-X Gi0/3 (outside)
+ ip address 192.168.100.1 255.255.255.252
+ ip nat inside
+ no shutdown
+!
+! --- NAT ---
+! NOTE: both halves required. Missing either = silent failure.
+ip nat inside source list NAT-SOURCES interface GigabitEthernet0/0 overload
+!
+! Inbound single-port static DNAT.
+! The target MUST be the real DMZ host. The ASA performs no NAT, so pointing
+! this at the ASA's outside interface (192.168.100.2) produces a packet the
+! ASA's own OUTSIDE-IN ACL will never match. See docs/14-troubleshooting-log.md #2.
+ip nat inside source static udp 192.168.20.10 19132 interface GigabitEthernet0/0 19132
+!
+! --- Routing ---
+! NAT rewrites an address; it does not create reachability.
+! Without this route the translated packet has nowhere to go. See #3.
+ip route 192.168.20.0 255.255.255.0 192.168.100.2
+<FILL: ip route 0.0.0.0 0.0.0.0 <ISP_GW>>
+<FILL: route toward 192.168.10.0/24 via 192.168.100.2 if inside-originated
+       return traffic needs it — verify with show ip route>
+!
+! --- ACLs ---
+<FILL: ip access-list standard NAT-SOURCES — permit the inside and dmz subnets>
+<FILL: edge ACL inbound on Gi0/0 — anti-spoof, bogon drop, permit established>
+!
+! --- Management ---
+<FILL: line vty, transport input ssh, access-class, login local, exec-timeout>
+<FILL: enable secret <REDACTED>>
+!
+! --- Hardening (outstanding) ---
+<FILL: no ip http server / no ip http secure-server>
+<FILL: service password-encryption>
+<FILL: no cdp run on the WAN interface>
+<FILL: logging buffered>
+!
+end
