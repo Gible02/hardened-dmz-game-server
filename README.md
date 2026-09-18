@@ -17,7 +17,7 @@ An internet-facing game server isolated from a trusted LAN by a Cisco ASA 5515-X
 | **Edge router** | Cisco 1921 ISR — PAT overload, single-port static DNAT, static routing |
 | **Firewall** | Cisco ASA 5515-X — three-legged: inside / dmz / outside |
 | **Switch** | Cisco Catalyst WS-C2960X-48LPS-L — trusted-side layer 2 |
-| **Server host** | Intel i3-13100F / 16 GB RAM / 1 TB HDD — Windows 11 |
+| **Server host** | Intel i3-13100F (4 cores, 8 threads) / 24 GB RAM / 256 TB SSD — Windows 11 |
 | **Exposed service** | Minecraft Bedrock — UDP 19132, single-port static PAT |
 | **Users served** | ~5 allowlisted players |
 | **Status** | **Core build validated end to end.** Egress filtering and backup automation outstanding — see [control status](#security-controls) |
