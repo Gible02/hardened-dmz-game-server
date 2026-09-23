@@ -41,6 +41,5 @@ Prefix with the test ID where one applies, so the validation table links straigh
 - [ ] Prefer `.txt` command output over screenshots where possible: searchable, diffable, smaller
 
 The cellular source address (172.56.x.x) is a carrier NAT address, not personally identifying.
-Keep it — it is the evidence that the test genuinely came from outside the network.
 
 See [`../docs/15-sanitization.md`](../docs/15-sanitization.md).
