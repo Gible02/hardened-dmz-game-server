@@ -1,6 +1,6 @@
 # Hardened DMZ Game Server
 
-**Defense-in-depth network architecture on enterprise Cisco hardware — three-legged routed DMZ, stateful firewall enforcement, single-port PAT.**
+**Defense network architecture on enterprise Cisco hardware — three-legged routed DMZ, stateful firewall enforcement, single port PAT.**
 
 An internet-facing game server isolated from a trusted LAN by a Cisco ASA 5515-X, built on real enterprise hardware and validated end to end from an external cellular connection. Documented from cable trace to control validation, including the failures.
 
