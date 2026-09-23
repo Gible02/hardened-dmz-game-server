@@ -27,7 +27,7 @@ Packet Tracer doesn't carry the exact models in the physical build:
 The faulty Gi0/1 port, real ISP behaviour, the config-register fault, the missing Visual C++
 runtime, and actual UDP game traffic from an external network. Every one of the six failures in
 [`../docs/14-troubleshooting-log.md`](../docs/14-troubleshooting-log.md) came from the physical
-build, not the simulation — which is the strongest argument for building on real hardware.
+build, not the simulation.
 
 Stating the limits of your own simulation is a maturity signal. Don't skip this section.
 
