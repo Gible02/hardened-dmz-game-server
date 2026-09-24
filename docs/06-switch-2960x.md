@@ -1,7 +1,7 @@
 # 06 — Catalyst WS-C2960X-48LPS-L (Access Switch)
 
 Config: [`../configs/catalyst-2960x.sanitized.txt`](../configs/catalyst-2960x.sanitized.txt)
-Status: **cabled and passing traffic — hardening config NOT confirmed applied**
+Status: **cabled and passing traffic. hardening config NOT confirmed applied**
 
 ## Role
 
